@@ -10,7 +10,7 @@ with open("TOKEN") as f:
 #from stayingalive import keep_alive
 
 from botTalk import getresponse
-from stringOps import replace
+# from stringOps import replace
 from timecheck import TimeCheckLoop, AddNewReminder, SetReminderFunction
 from quotes import getquote
 
@@ -73,11 +73,10 @@ SELF_PING : str
 
 BOT_LOG_CHANNEL = "bot-log"
 
-rfile = open(r"C:\Users\Craft\Desktop\Projects\py\discord bot\reactions.txt", "r")
-import ast
-_ = "{" + "".join(rfile.readlines(-1)) + "}"
-REACTIONS = ast.literal_eval(_)
-rfile.close()
+with open("reactions.txt") as rfile:
+	import ast
+	_ = "{" + "".join(rfile.readlines(-1)) + "}"
+	REACTIONS = ast.literal_eval(_)
 
 COMMAND_PREFIX = "!"
 HELP_MSG  = f"""
@@ -179,9 +178,9 @@ async def on_ready():
 
 	#aggiunge un collegamento a generale alle info del bot. non possiamo settarlo insieme al resto del messaggio perché il client non è attivo
 	global BOT_INFO
-	BOT_INFO = replace(BOT_INFO, "#", GetChannelLink("bot-tests"))
+	BOT_INFO = BOT_INFO.replace("#", GetChannelLink("bot-tests"))
 	global HELP_MSG
-	HELP_MSG = replace(HELP_MSG, "@", GetPing("Borsez"))
+	HELP_MSG = HELP_MSG.replace("@", GetPing("Borsez"))
 
 	await SendLog("online!")
 
@@ -211,13 +210,13 @@ async def on_message(message: discord.Message):
 			if SELF_PING in message.content or client.user.mention in message.content:
 				#await channel.send(random.choice(PING_ANSWERS) if random.randint(0, len(PING_ANSWERS) + 1) != 0 else message.author.mention)
 				print("\t" "initiating chat")
-				msg = message.content
+				msg: str = message.content
 		
 				#cambiamo dal ping a un nome generico, in modo che quella stringa di numeri non mandi in palla l'IA
 				if client.user.mention in msg:
-					msg = replace(msg, client.user.mention, "")
+					msg = msg.replace(client.user.mention, "")
 				else:	#if either of the two always
-					msg = replace(msg, SELF_PING, "")
+					msg = msg.replace(SELF_PING, "")
 		
 				response = await getresponse(msg)
 				print("\t" "out of getresponse function")
