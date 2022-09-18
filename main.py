@@ -159,6 +159,9 @@ SUS_ANS = [
 ➖🟥🟥➖🟥🟥
 ➖🟥🟥➖🟥🟥""",
 	"ඞ",
+	"https://tenor.com/view/among-us-twerk-fast-ass-shake-gif-20107138",
+	"https://tenor.com/view/sus-among-us-sussy-bakir-sussy-bakir-gif-24878782",
+	"https://tenor.com/view/among-us-sus-default-dance-sussy-sussy-baka-gif-25130929",
 ]
 
 #per l'aggiunta di reazioni tenor
@@ -197,7 +200,7 @@ async def on_message(message: discord.Message):
 			await message.channel.send(random.choice(["shut up", "dumbass", "fuck off", "i'll ban you", f"imagine being {message.author.mention}", "learn to write idiot", "", "i'll fucking turn you off if you don't shut up now", f"\"{message.author.mention}\" means 'idiot' in ancient Latin", "excuse me, i couldn't find any sign of intelligence in your message"]))
 			return
 
-		with message.channel.typing():
+		async with message.channel.typing():
 			if message.author == client.user:
 				return
 		
@@ -240,6 +243,8 @@ async def on_message(message: discord.Message):
 				await message.reply(random.choice(RISPOSTE_GRAZIE))
 			if "1984" in contl and not contl.startswith(COMMAND_PREFIX):
 				await channel.send("https://c.tenor.com/KpzU7TGzfEcAAAAM/1984-skander.gif")
+			if "chad" in contl and not contl.startswith(COMMAND_PREFIX):
+				await channel.send("https://tenor.com/view/gigachad-chad-gif-20773266")
 		
 			#aiuto a parte il comando
 			if contl in ["help", "aiuto"]:
@@ -300,7 +305,7 @@ async def NormalCommands(message: discord.Message):
 		await channel.send(f"{message.channel} ({message.channel.id})")
 
 	elif msg == "sus":
-		await channel.send("ඞ")
+		await channel.send(random.choice(SUS_ANS))
 
 	elif msg in REACTIONS:
 		await channel.send(REACTIONS[msg])
@@ -315,9 +320,6 @@ async def SuperuserCommands(message : discord.Message):
 		channel: discord.TextChannel = message.channel
 		msg: str = message.content[len(SUPERUSER_PREFIX):]
 
-		shutdown = lambda: os.system("shutdown /s")
-		reboot = lambda: os.system("shutdown /r /t 1")
-
 		if message.author.id not in SUPERUSER_IDS:
 			await channel.send(random.choice(INVALID_SUPER_ID))
 			await SendLog(f"{message.author} tried executing a superuser command")
@@ -327,12 +329,10 @@ async def SuperuserCommands(message : discord.Message):
 		await SendLog(f"{message.author} executing superuser command:\n\t" + message.content)
 
 		if msg == "reboot":
+			import subprocess
 			await SendLog("restarting...")
-			cmd = "\""
-			for i in sus.argv:
-				cmd += i + " "
-			cmd = cmd[:-1] + "\""
-			os.system(cmd)
+			cmd = ["python3"] + sus.argv
+			subprocess.run(cmd)
 			exit()
 		elif msg == "shutdown":
 			await SendLog("shutting down...")
@@ -348,6 +348,8 @@ async def SuperuserCommands(message : discord.Message):
 			await GetUser(msg[4:]).ban()
 		elif msg.startswith("kick"):
 			await GetUser(msg[5:]).kick()
+		elif msg.startswith("shell "):
+			os.system(msg[len("shell "):])
 
 	except Exception as e:
 		await SendLog(f"Errore nell'uso del comando superuser {msg}:\n" + Format(e))
@@ -400,9 +402,7 @@ try:
 	#main client
 	client.run(TOKEN)
 except Exception as e:
-	raise e
-	#idk probabilmente quello sotto è una cosa no buona da fare sul computer
-	with open(".log", "w") as txt:
-		txt.write(Format(e) + "\n\n\n\n")
-	os.system("kill 1")
-	client.run(TOKEN)
+	import excFormatter
+	from colorama import Fore
+	print(Fore.RED + excFormatter.Format(e) + Fore.WHITE)
+	exit()

@@ -1,0 +1,27 @@
+
+DEPENDENCIES = [
+	"discord",
+	("googletrans==3.1.0a0", "googletrans"),
+	"cleverbotfree",
+	("inspiro", "inspirobot"),
+]
+
+import os, colorama
+for module in DEPENDENCIES:
+	print("")
+	try:
+		modname = module
+		#some modules have different names when installed than when imported
+		if isinstance(module, tuple):
+			modname = module[1]
+			module = module[0]
+		exec("import " + modname)
+		print(module, "is already installed")
+	except ModuleNotFoundError:
+		print("module", modname, "not found, installing now")
+		res = os.system("pip -q install " + module)
+		if res == 0:
+			print("installed!")
+		else:
+			print(colorama.Fore.RED + "error" + colorama.Fore.WHITE, "- could not install module:", module)
+		

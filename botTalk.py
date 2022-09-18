@@ -16,7 +16,7 @@ async def getresponse(input):
 		input = translator.translate(input, src=msglanguage).text
 		print("\t\ttranslated input:", input)#
 
-		#ottiene la risposta (so al 100% cosa fa questo codice)
+		#ottiene la risposta
 		print("\t\t\tgetting p_w...")
 		async with cleverbotfree.async_playwright() as p_w:
 			print("\t\t\tgetting c_b...")

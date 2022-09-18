@@ -4,6 +4,8 @@ def getquote():
 	x = Translator()
 	quote = x.translate(random.choice(inspirobot.flow()), dest="it").text
 	quote = f'"_{quote}_"\n\n\t\t- ' + random.choice(BOOK_AUTHORS + QUOTE_AUTHORS)
+	if "respir" in quote:#mi sono rotto di queste merde
+		quote = getquote()
 	return quote
 QUOTE_AUTHORS = [
 	"Barack Obama",
@@ -41,6 +43,14 @@ QUOTE_AUTHORS = [
 	"Barbiere di Siviglia",
 	"Dante Alighieri",
 	"Virgilio",
+	"Josif Stalin",
+	"Gosig Ratta",
+	"Matteo Renzi",
+	"Mario Draghi",
+	"Vladimir Lenin",
+	"Xi Jinping",
+	"Leo Mesi",
+	"Immanuel Kant",
 ]
 BOOK_AUTHORS = [
 	"Sun Tsu, in \"L'Arte della Guerra\"",
@@ -49,8 +59,10 @@ BOOK_AUTHORS = [
 	'Marco Aurelio, in "Meditazioni"',
 	'George Orwell, in "1984"',
 	'Karl Marx, in "Il Capitale"',
+	'Karl Marx, in "Il Manifesto Comunista"',
 	"Charles Darwin, in \"L'Origine delle Specie\"",
 	'Albert Einstein, "La Teoria della Relatività"',
 	"Laerte, in Amleto",
 	"Virgilio, nella Divina Commedia",
+	"Immanuel Kant, in \"Critica alla ragion pura\"",
 ]

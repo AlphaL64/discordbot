@@ -5,7 +5,7 @@ from typing import Callable as _func
 #file dove sono salvati i reminder se il bot si spegne
 __FILENAME = "reminders.tmk"
 #promemoria attivi (la stringa è l'user che ha richiesto e il messaggio)
-reminders: list[tuple[__dt.date, str, str]] = []
+reminders=[]#: list[tuple[__dt.date, str, str]] = []
 #tempo tra un check e l'altro di cui viene rallentato manualmente il programma
 LAMP = 0
 #messaggio da mandare come promemoria
