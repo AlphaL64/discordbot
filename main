@@ -164,9 +164,9 @@ SUS_ANS = [
 	"https://tenor.com/view/among-us-sus-default-dance-sussy-sussy-baka-gif-25130929",
 ]
 
-#per l'aggiunta di reazioni tenor
-waiting_for_conf = False
-confirm_event = asyncio.Event()
+# #per l'aggiunta di reazioni tenor
+# waiting_for_conf = False
+# confirm_event = asyncio.Event()
 	
 
 #events
@@ -191,10 +191,10 @@ async def on_ready():
 async def on_message(message: discord.Message):
 	#è
 	try:
-		#we were waiting for tenor link adding confirmation
-		if waiting_for_conf is True:
-			if message.content == "aggiungi":
-				confirm_event.set()
+		# #we were waiting for tenor link adding confirmation
+		# if waiting_for_conf is True:
+		# 	if message.content == "aggiungi":
+		# 		confirm_event.set()
 
 		if message.author.id == 886477323812110356:
 			await message.channel.send(random.choice(["shut up", "dumbass", "fuck off", "i'll ban you", f"imagine being {message.author.mention}", "learn to write idiot", "", "i'll fucking turn you off if you don't shut up now", f"\"{message.author.mention}\" means 'idiot' in ancient Latin", "excuse me, i couldn't find any sign of intelligence in your message"]))
@@ -227,9 +227,9 @@ async def on_message(message: discord.Message):
 				await message.reply(response, mention_author=False)
 				return
 		
-			if contl.startswith("https://tenor.com/view/") or contl.startswith("https://c.tenor.com/"):
-				await AddLink(message)
-				return
+			# if contl.startswith("https://tenor.com/view/") or contl.startswith("https://c.tenor.com/"):
+			# 	await AddLink(message)
+			# 	return
 
 			#these are absolutely necessary
 			import re
@@ -329,11 +329,10 @@ async def SuperuserCommands(message : discord.Message):
 		await SendLog(f"{message.author} executing superuser command:\n\t" + message.content)
 
 		if msg == "reboot":
-			import subprocess
 			await SendLog("restarting...")
 			cmd = ["python3"] + sus.argv
-			subprocess.run(cmd)
-			exit()
+			#something like execute new thing and close old one
+			os.execv(sus.executable, cmd)
 		elif msg == "shutdown":
 			await SendLog("shutting down...")
 			exit()
@@ -358,16 +357,16 @@ async def SuperuserCommands(message : discord.Message):
 async def pm(user, message):
 	await user.send(message)
 
-async def AddLink(msg : discord.Message):
-	global waiting_for_conf
-	waiting_for_conf = True
-	await msg.channel.send("ho rilevato un link tenor. scrivi 'aggiungi' se vuoi aggiungerlo alla lista di reazioni veloci")
-	await confirm_event.wait()
-	#resetta i flag
-	confirm_event.clear()
-	waiting_for_conf = False
-	#aggiungi il link
-	#TODO: nome
+# async def AddLink(msg : discord.Message):
+# 	global waiting_for_conf
+# 	waiting_for_conf = True
+# 	await msg.channel.send("ho rilevato un link tenor. scrivi 'aggiungi' se vuoi aggiungerlo alla lista di reazioni veloci")
+# 	await confirm_event.wait()
+# 	#resetta i flag
+# 	confirm_event.clear()
+# 	waiting_for_conf = False
+# 	#aggiungi il link
+# 	#TODdO: nome
 
 
 @client.event

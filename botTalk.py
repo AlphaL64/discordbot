@@ -14,7 +14,7 @@ async def getresponse(input):
 
 		#dato che il bot è usato in Italiano. in teoria funziona anche per altre lingue
 		input = translator.translate(input, src=msglanguage).text
-		print("\t\ttranslated input:", input)#
+		print("\t\ttranslated input:", input)
 
 		#ottiene la risposta
 		print("\t\t\tgetting p_w...")

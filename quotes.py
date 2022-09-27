@@ -2,55 +2,81 @@ def getquote():
 	import random, inspirobot
 	from googletrans import Translator
 	x = Translator()
-	quote = x.translate(random.choice(inspirobot.flow()), dest="it").text
+	
+	#this whole thing is to prevent quotes about "keep breathing" because they're everywhere and they're boring
+	quote = None
+	for q in inspirobot.flow():
+		if "breath" in q.quote:
+			continue
+		quote = q.quote
+		break
+	if quote is None: quote = getquote()
+
+	quote = x.translate(quote, dest="it").text
 	quote = f'"_{quote}_"\n\n\t\t- ' + random.choice(BOOK_AUTHORS + QUOTE_AUTHORS)
-	if "respir" in quote:#mi sono rotto di queste merde
-		quote = getquote()
 	return quote
 QUOTE_AUTHORS = [
-	"Barack Obama",
-	"Sun Tsu",
-	"Socrate",
-	"Aristotele",
-	"Napoleone Bonaparte",
-	"Abramo Lincoln",
-	"Mahatma Ghandi",
-	"Giulio Cesare",
-	"John F. Kennedy",
-	"Micheal Jackson",
-	"Hirohito",
-	"Nelson Mandela",
-	"Martin Luther King",
-	"Winston Churchill",
+
+	#imprenditori
 	"Bill Gates",
-	"Madre Teresa",
-	"Cristoforo Colombo",
-	"Albert Einstein",
-	"Charles Darwin",
-	"Regina Elisabetta II",
-	"George Orwell",
-	"Leo Tolstoy",
-	"Vladimir Lenin",
 	"Elon Musk",
-	"Cleopatra",
 	"Steve Jobs",
-	"Sigmund Freud",
+	
+	#politici
+	"Hirohito",
+	"Winston Churchill",
+	"Regina Elisabetta II",
+	"Cleopatra",
 	"Mao Zedong",
 	"Silvio Berlusconi",
-	"Marco Aurelio",
-	"Karl Marx",
-	"William Shakespeare",
-	"Barbiere di Siviglia",
-	"Dante Alighieri",
-	"Virgilio",
 	"Josif Stalin",
-	"Gosig Ratta",
 	"Matteo Renzi",
 	"Mario Draghi",
 	"Vladimir Lenin",
 	"Xi Jinping",
-	"Leo Mesi",
+	"Giuseppe Garibaldi",
+	"Barack Obama",
+	"Napoleone Bonaparte",
+	"Abramo Lincoln",
+	"Giulio Cesare",
+	"John F. Kennedy",
+	"Benito Mussolini",
+	"Matteo Salvini",
+	"Andrea di Piero",
+	
+	#filosofi
+	"Albert Einstein",
+	"Charles Darwin",
+	"Sigmund Freud",
+	"Marco Aurelio",
+	"Karl Marx",
 	"Immanuel Kant",
+	"Sun Tsu",
+	"Socrate",
+	"Aristotele",
+
+	#scrittori, poeti, cantanti
+	"George Orwell",
+	"Leo Tolstoy",
+	"William Shakespeare",
+	"Dante Alighieri",
+	"Virgilio",
+	"Giuseppe Ungaretti",
+	"Giacomo Leopardi",
+	"Micheal Jackson",
+
+	#gente varia
+	"Cristoforo Colombo",
+	"Martin Luther King",
+	"Madre Teresa",
+	"Nelson Mandela",
+	"Mahatma Ghandi",
+	
+	#cagate
+	"Barbiere di Siviglia",
+	"Gosig Ratta",
+	"Leo Mesi",
+	"Rocktopus",
 ]
 BOOK_AUTHORS = [
 	"Sun Tsu, in \"L'Arte della Guerra\"",
@@ -65,4 +91,5 @@ BOOK_AUTHORS = [
 	"Laerte, in Amleto",
 	"Virgilio, nella Divina Commedia",
 	"Immanuel Kant, in \"Critica alla ragion pura\"",
+	"Giuseppe Garibaldi al suo esercito, prima di iniziare la spedizione dei mille",
 ]
