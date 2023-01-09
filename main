@@ -1,8 +1,9 @@
+#!/usr/bin/python3
+
 import discord
 import os
 import sys as sus
 from threading import Thread
-import asyncio
 
 with open("TOKEN") as f:
 	TOKEN = f.read(-1)
@@ -129,11 +130,16 @@ RISPOSTE_GRAZIE = [
 	"è un piacere esserti utile",
 	"a volte è dura essere benevolo quanto me",
 	"non per vantarmi, ma merito decisamente la tua gratitudine",
+	"di nulla, è più forte di me aiutarti",
+	"dall'alto della mia magnanimità non avrei potuto non aiutarti",
 ]
 PYTHON_ANSWERS = [
 	"C++ > Python",
 	"immagina un linguaggio in cui un errore di battitura ti viene fatto notare",
 	"*laughs in clearly superior C++*",
+	"_indentation_",
+	"programming in Python be like:\nhttps://tenor.com/view/monsters-university-snail-going-on-my-way-omw-gif-5461800",
+	"average Python fan:\nhttps://tenor.com/view/kerosene-kero-made-marcus-marcus-marcus-the-snail-he-goes-gif-22365259",
 ]
 SUS_ANS = [
 	"""
@@ -339,6 +345,7 @@ async def SuperuserCommands(message : discord.Message):
 		elif msg.startswith("exec"):
 			print("\t" "executing:\n\t" + msg[5:])
 			exec(msg[5:])
+			print("end of exec")
 		elif msg.startswith("pm("):
 			username = GetUser(msg[3:msg.index(",")])
 			emssage = eval(msg[msg.index(",")+1:msg.index(")")])

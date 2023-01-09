@@ -15,6 +15,7 @@ def getquote():
 	quote = x.translate(quote, dest="it").text
 	quote = f'"_{quote}_"\n\n\t\t- ' + random.choice(BOOK_AUTHORS + QUOTE_AUTHORS)
 	return quote
+
 QUOTE_AUTHORS = [
 
 	#imprenditori
@@ -23,6 +24,7 @@ QUOTE_AUTHORS = [
 	"Steve Jobs",
 	
 	#politici
+	"Andrea di Piero",
 	"Hirohito",
 	"Winston Churchill",
 	"Regina Elisabetta II",
@@ -42,7 +44,6 @@ QUOTE_AUTHORS = [
 	"John F. Kennedy",
 	"Benito Mussolini",
 	"Matteo Salvini",
-	"Andrea di Piero",
 	
 	#filosofi
 	"Albert Einstein",
@@ -77,6 +78,7 @@ QUOTE_AUTHORS = [
 	"Gosig Ratta",
 	"Leo Mesi",
 	"Rocktopus",
+	"Giovanni Giorgio",
 ]
 BOOK_AUTHORS = [
 	"Sun Tsu, in \"L'Arte della Guerra\"",
