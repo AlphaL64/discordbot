@@ -3,7 +3,7 @@ from googletrans import Translator
 from excFormatter import Format
 
 translator = Translator()
-
+#TODO: do the thing myself
 async def getresponse(input):
 	try:
 		print("\t\tgenerating response for:", input)
