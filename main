@@ -227,7 +227,20 @@ async def on_message(message: discord.Message):
 			
 				channel : discord.TextChannel = message.channel
 				contl: str = message.content.lower()
-				
+			
+				#se è un comando normale
+				if message.content.startswith(COMMAND_PREFIX):
+					channel: discord.TextChannel = message.channel
+					msg: str = message.content[len(COMMAND_PREFIX):]	#teniamo solo il comando in se in modo che non dobbiamo preoccuparci del prefisso se cambia
+					tokens = msg.split(" ")
+
+					await NormalCommands(tokens, message, channel)
+					return
+				#se è un comando superuser
+				elif message.content.startswith(SUPERUSER_PREFIX):
+					await SuperuserCommands(message)
+					return
+
 				#if we get a ping we call cleverbot chat
 				if SELF_PING in message.content or client.user.mention in message.content:
 					#await channel.send(random.choice(PING_ANSWERS) if random.randint(0, len(PING_ANSWERS) + 1) != 0 else message.author.mention)
@@ -256,25 +269,14 @@ async def on_message(message: discord.Message):
 					await PingBorse(channel)
 				if "grazie" in contl:
 					await message.reply(random.choice(RISPOSTE_GRAZIE))
-				if "1984" in contl and not contl.startswith(COMMAND_PREFIX):
+				if "1984" in contl:
 					await channel.send("https://c.tenor.com/KpzU7TGzfEcAAAAM/1984-skander.gif")
-				if "chad" in contl and not contl.startswith(COMMAND_PREFIX):
+				if "chad" in contl:
 					await channel.send("https://tenor.com/view/gigachad-chad-gif-20773266")
 			
 				#aiuto a parte il comando
 				if contl in ["help", "aiuto"]:
 					await channel.send(HELP_MSG_2)
-			
-				#se è un comando normale
-				if message.content.startswith(COMMAND_PREFIX):
-					channel: discord.TextChannel = message.channel
-					msg: str = message.content[len(COMMAND_PREFIX):]	#teniamo solo il comando in se in modo che non dobbiamo preoccuparci del prefisso se cambia
-					tokens = msg.split(" ")
-
-					await NormalCommands(tokens, message, channel)
-				#se è un comando superuser
-				if message.content.startswith(SUPERUSER_PREFIX):
-					await SuperuserCommands(message)
 			#END WITH
 	#invalid commando
 	except ID10T_Exception:
@@ -359,6 +361,7 @@ async def NormalCommands(tokens: list[str], message: discord.Message, channel: d
 				await mod.send("accetta? [y/n] (rispondi al primo messaggio)")
 
 		case other:
+			updatereactions()
 			if other in REACTIONS:
 				await channel.send(REACTIONS[tokens[0]])
 			else:
