@@ -1,2 +1,4 @@
 "1984" : "https://c.tenor.com/KpzU7TGzfEcAAAAM/1984-skander.gif",
 "mindblown" : "https://tenor.com/view/gif-gif-19493675",
+"chad" : "https://tenor.com/view/gigachad-chad-gif-20773266",
+"lella" : "https://tenor.com/view/sora-lella-tie-gif-7741962",

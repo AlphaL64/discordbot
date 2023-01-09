@@ -33,8 +33,6 @@ def shell():
 			
 		os.system(inp)
 
-#TODO: qualcosa che quando qualcuno manda un link tenor chiede se vuoi aggiungerlo ai comandi e se sì lo fa automaticamente
-
 
 #funcs
 def GetChannel(name : str) -> discord.TextChannel:
@@ -47,6 +45,8 @@ def GetUser(name : str) -> discord.User:
 		if user.name == name:
 			return user
 	return None
+def GetRole(name: str) -> discord.Role:
+	pass
 def GetEmote(name : str) -> discord.Emoji:
 	for emote in client.emojis:
 		if emote.name == name:
@@ -72,12 +72,12 @@ def exit():
 #constants
 SELF_PING : str
 
+INIT_SUCC_MSG = "online!"
+
 BOT_LOG_CHANNEL = "bot-log"
 
-with open("reactions.txt") as rfile:
-	import ast
-	_ = "{" + "".join(rfile.readlines(-1)) + "}"
-	REACTIONS = ast.literal_eval(_)
+REACTIONS = {}
+REACTIONS_FILE = "reactions.txt"
 
 COMMAND_PREFIX = "!"
 HELP_MSG  = f"""
@@ -87,25 +87,26 @@ comandi:
 	help			- mi chiedo cosa faccia questo comando
 	info			- informazioni sul di me
 
-	roba:
+	funzionalità:
 	echo msg		- ripete il messaggio, cancellando il tuo automaticamente
-	ping [i]		- manda un ping a {"@"} "i" volte (una volta di default)
 	remindme time [; msg]	- ti manderò un promemoria alla data richiesta. se non aggiungi un messaggio, ti manderò un link al tuo post
 	quote			- frase ispirazionale generata al momento
+	addreact nome link	- aggiunge una reazione con il nome dato ed il link tenor specificato. richiede l'approvazione di un moderatore
+	
+	utilità:
+	ping [i]		- manda un ping a {"@"} "i" volte (una volta di default)
 	sus				- sus
 
 	debug:
 	channel			- scrive il nome e l'ID del canale in cui sei
 	user			- scrive nome e ID di chi ha scritto il messaggio
-
-	reazioni:
 """#qui non funzionano i ping perché il client non è ancora attivo
-for command in REACTIONS:
-	HELP_MSG += f"\t{command}\n"
 HELP_MSG_2 = f'i comandi si scrivono con "{COMMAND_PREFIX}". per una lista di comandi usa il comando "help"'
 BOT_INFO = f"""
 sono un bot programmato da @L, il proprietario del server, e sono fatto in Python usando l'API ufficiale di discord. sono appena stato creato quindi non ho molti comandi, ma sono in continua espansione. se hai suggerimenti, non esitare a mandarli in {"#"}!
 """#'''
+
+MODS: list[discord.User] = []
 
 SUPERUSER_PREFIX = "superuser "
 SUPERUSER_IDS = [ 487601580539904000 ]
@@ -170,16 +171,12 @@ SUS_ANS = [
 	"https://tenor.com/view/among-us-sus-default-dance-sussy-sussy-baka-gif-25130929",
 	"https://tenor.com/view/when-the-impostor-is-sus-impostor-impostor-among-us-among-us-among-us-sus-gif-24712125",
 ]
-
-# #per l'aggiunta di reazioni tenor
-# waiting_for_conf = False
-# confirm_event = asyncio.Event()
 	
 
 #events
 @client.event
 async def on_ready():
-	print(f'succesfully logged in as {client.user}')
+	print(f'successfully logged in as {client.user}')
 	#set this
 	global SELF_PING
 	SELF_PING = GetPing(client.user.name)
@@ -192,78 +189,93 @@ async def on_ready():
 	global HELP_MSG
 	HELP_MSG = HELP_MSG.replace("@", GetPing("Borsez"))
 
-	await SendLog("online!")
+	await SendLog(INIT_SUCC_MSG)
+async def init(message: discord.Message):
+	if MODS == []:
+		for member in discord.utils.get(await message.guild.fetch_roles(), name="mod").members:
+			if not member == client.user:
+				MODS.append(member)
+	#ENDIF
+
+def updatereactions():
+	global REACTIONS
+	with open(REACTIONS_FILE) as rfile:
+		import ast
+		_ = "{" + "".join(rfile.readlines(-1)) + "}"
+		REACTIONS = ast.literal_eval(_)
 
 @client.event
 async def on_message(message: discord.Message):
 	#è
 	try:
-		# #we were waiting for tenor link adding confirmation
-		# if waiting_for_conf is True:
-		# 	if message.content == "aggiungi":
-		# 		confirm_event.set()
-
 		if message.author.id == 886477323812110356:
 			await message.channel.send(random.choice(["shut up", "dumbass", "fuck off", "i'll ban you", f"imagine being {message.author.mention}", "learn to write idiot", "", "i'll fucking turn you off if you don't shut up now", f"\"{message.author.mention}\" means 'idiot' in ancient Latin", "excuse me, i couldn't find any sign of intelligence in your message"]))
 			return
-
-		async with message.channel.typing():
-			if message.author == client.user:
-				return
 		
-			print("received message:\n\t" + message.content + "\n")
-		
-			channel : discord.TextChannel = message.channel
-			contl: str = message.content.lower()
+		if isinstance(message.channel, discord.DMChannel):
+			await respond_pm(message)
+		else:
+			async with message.channel.typing():
+				if message.author == client.user:
+					#se è il messaggio di inizio, inizializza il bot
+					if message.content == INIT_SUCC_MSG:
+						if message.channel.id == GetChannel(BOT_LOG_CHANNEL).id:
+							await init(message)
+					return
 			
-			#if we get a ping we call cleverbot chat
-			if SELF_PING in message.content or client.user.mention in message.content:
-				#await channel.send(random.choice(PING_ANSWERS) if random.randint(0, len(PING_ANSWERS) + 1) != 0 else message.author.mention)
-				print("\t" "initiating chat")
-				msg: str = message.content
-		
-				#cambiamo dal ping a un nome generico, in modo che quella stringa di numeri non mandi in palla l'IA
-				if client.user.mention in msg:
-					msg = msg.replace(client.user.mention, "")
-				else:	#if either of the two always
-					msg = msg.replace(SELF_PING, "")
-		
-				response = await getresponse(msg)
-				print("\t" "out of getresponse function")
-		
-				await message.reply(response, mention_author=False)
-				return
-		
-			# if contl.startswith("https://tenor.com/view/") or contl.startswith("https://c.tenor.com/"):
-			# 	await AddLink(message)
-			# 	return
+				print("received message:\n\t" + message.content + "\n")
+			
+				channel : discord.TextChannel = message.channel
+				contl: str = message.content.lower()
+				
+				#if we get a ping we call cleverbot chat
+				if SELF_PING in message.content or client.user.mention in message.content:
+					#await channel.send(random.choice(PING_ANSWERS) if random.randint(0, len(PING_ANSWERS) + 1) != 0 else message.author.mention)
+					print("\t" "initiating chat")
+					msg: str = message.content
+			
+					#cambiamo dal ping a un nome generico, in modo che quella stringa di numeri non mandi in palla l'IA
+					if client.user.mention in msg:
+						msg = msg.replace(client.user.mention, "")
+					else:	#if either of the two always
+						msg = msg.replace(SELF_PING, "")
+			
+					response = await getresponse(msg)
+					print("\t" "out of getresponse function")
+			
+					await message.reply(response, mention_author=False)
+					return
 
-			#these are absolutely necessary
-			import re
-			if re.search(u'[\u4e00-\u9fff]+', message.content) is not None:
-				await channel.send(random.choice(CHINESE_ANSWERS))
-			if "python" in contl:
-				await channel.send(random.choice(PYTHON_ANSWERS))#TODO: più frasi belle lmao
-			if "gatt" in contl:
-				await PingBorse(channel)
-			if "grazie" in contl:
-				await message.reply(random.choice(RISPOSTE_GRAZIE))
-			if "1984" in contl and not contl.startswith(COMMAND_PREFIX):
-				await channel.send("https://c.tenor.com/KpzU7TGzfEcAAAAM/1984-skander.gif")
-			if "chad" in contl and not contl.startswith(COMMAND_PREFIX):
-				await channel.send("https://tenor.com/view/gigachad-chad-gif-20773266")
-		
-			#aiuto a parte il comando
-			if contl in ["help", "aiuto"]:
-				await channel.send(HELP_MSG_2)
-		
-			#se è un comando normale
-			if message.content.startswith(COMMAND_PREFIX):
-				await NormalCommands(message)
-			#se è un comando superuser
-			if message.content.startswith(SUPERUSER_PREFIX):
-				await SuperuserCommands(message)
-		#END WITH
+				#these are absolutely necessary
+				import re
+				if re.search(u'[\u4e00-\u9fff]+', message.content) is not None:
+					await channel.send(random.choice(CHINESE_ANSWERS))
+				if "python" in contl:
+					await channel.send(random.choice(PYTHON_ANSWERS))#TODO: più frasi belle lmao
+				if "gatt" in contl:
+					await PingBorse(channel)
+				if "grazie" in contl:
+					await message.reply(random.choice(RISPOSTE_GRAZIE))
+				if "1984" in contl and not contl.startswith(COMMAND_PREFIX):
+					await channel.send("https://c.tenor.com/KpzU7TGzfEcAAAAM/1984-skander.gif")
+				if "chad" in contl and not contl.startswith(COMMAND_PREFIX):
+					await channel.send("https://tenor.com/view/gigachad-chad-gif-20773266")
+			
+				#aiuto a parte il comando
+				if contl in ["help", "aiuto"]:
+					await channel.send(HELP_MSG_2)
+			
+				#se è un comando normale
+				if message.content.startswith(COMMAND_PREFIX):
+					channel: discord.TextChannel = message.channel
+					msg: str = message.content[len(COMMAND_PREFIX):]	#teniamo solo il comando in se in modo che non dobbiamo preoccuparci del prefisso se cambia
+					tokens = msg.split(" ")
+
+					await NormalCommands(tokens, message, channel)
+				#se è un comando superuser
+				if message.content.startswith(SUPERUSER_PREFIX):
+					await SuperuserCommands(message)
+			#END WITH
 	#invalid commando
 	except ID10T_Exception:
 		await channel.send(er())
@@ -272,53 +284,85 @@ async def on_message(message: discord.Message):
 		await channel.send(er())
 		await SendLog(f"il seguente messaggio ha causato un problema:\n{message.content}\n\nl'errore:\n" + Format(e))
 
-async def NormalCommands(message: discord.Message):
-	channel: discord.TextChannel = message.channel
-	msg: str = message.content[len(COMMAND_PREFIX):]	#teniamo solo il comando in se in modo che non dobbiamo preoccuparci del prefisso se cambia
-	
-	if msg == "help":
-		await channel.send(HELP_MSG)
+async def respond_pm(message: discord.Message):
+	if message.author in MODS:
+		if message.content.lower().startswith("y"):
+			try:
+				reaction = (await message.channel.fetch_message(message.reference.message_id)).content
+				reaction = reaction.split("\n")		#TODO: rendere il messaggio cambiabile e farlo comunque funzionare
+				if reaction[1] in REACTIONS.keys():
+					await message.channel.send("è già stata aggiunta")
+					return
+				with open(REACTIONS_FILE, "a") as file:
+					file.write(f'"{reaction[1]}" : "{reaction[2]}",\n')
+			except Exception as e:
+				import excFormatter
+				print("error:\n" + excFormatter.Format(e))
+			else:
+				await message.channel.send("successfully added!")
+				await SendLog("nuova reazione tenor aggiunta")
+				updatereactions()
 			
-	elif msg == "info":
-		await channel.send(BOT_INFO)
+
+async def NormalCommands(tokens: list[str], message: discord.Message, channel: discord.TextChannel):
+	match tokens[0]:
+		case "help":
+			await channel.send(HELP_MSG)
+			await channel.send("reazioni:\n\t" + "\n\t".join(REACTIONS.keys()))
+			
+		case "info":
+			await channel.send(BOT_INFO)
 		
-	elif msg.startswith("echo"):
-		await channel.send(msg[4:])
-		await message.delete()
+		case "echo":
+			await channel.send("".join(tokens[1:]))
+			await message.delete()
 			
-	elif msg.startswith("ping"):
-		print("\t" "comedy genius")
-		if msg == "ping":	#no parameters
-			await PingBorse(channel)
-		else:
-			tot = int(msg[4:])
-			if tot < 1: raise
-			for i in range(tot):
+		case "ping":
+			print("\t" "comedy genius")
+			if len(tokens) == 1:	#no parameters
 				await PingBorse(channel)
+			else:
+				tot = int(tokens[1])
+				if tot < 1: raise
+				for i in range(tot):
+					await PingBorse(channel)
 
-	elif msg == "quote":
-		await channel.send(getquote())
+		case "quote":
+			if len(tokens) == 1:	#no parameters
+				await channel.send(getquote())
+			else:
+				tot = int(tokens[1])
+				if tot < 1: raise
+				for i in range(tot):
+					await channel.send(getquote())
 	
-	elif msg.startswith("remindme"):
-		user = message.author.name
-		time = msg[9:msg.index(";")] if ";" in msg else msg[9:]
-		mesg  = msg[msg.index(";") + 1:] if ";" in msg else message.jump_url
-		AddNewReminder(time, user, mesg)
-		await channel.send("promemoria salvato!")
+		case "remindme":
+			#TODO
+			pass
 
-	elif msg == "user":
-		await channel.send(f"{message.author.display_name} ({message.author.id})")
-	elif msg == "channel":
-		await channel.send(f"{message.channel} ({message.channel.id})")
+		case "user":
+			await channel.send(f"{message.author.display_name} ({message.author.id})")
+		case "channel":
+			await channel.send(f"{message.channel} ({message.channel.id})")
 
-	elif msg == "sus":
-		await channel.send(random.choice(SUS_ANS))
+		case "sus":
+			await channel.send(random.choice(SUS_ANS))
 
-	elif msg in REACTIONS:
-		await channel.send(REACTIONS[msg])
+		case "addreact":
+			name, link = tokens[1], tokens[2]
+			updatereactions()
+			if name in REACTIONS.keys():
+				await message.channel.send("ce n'è già una con quel nome")		#TODO: funny messaggio
+				return
+			for mod in MODS:
+				await mod.send(f"{message.author.name} ha chiesto di aggiungere una reazione:\n{name}\n{link}")
+				await mod.send("accetta? [y/n] (rispondi al primo messaggio)")
 
-	else:
-		raise ID10T_Exception
+		case other:
+			if other in REACTIONS:
+				await channel.send(REACTIONS[tokens[0]])
+			else:
+				raise ID10T_Exception
 #END commands
 async def SuperuserCommands(message : discord.Message):
 	try:
@@ -364,17 +408,6 @@ async def SuperuserCommands(message : discord.Message):
 
 async def pm(user, message):
 	await user.send(message)
-
-# async def AddLink(msg : discord.Message):
-# 	global waiting_for_conf
-# 	waiting_for_conf = True
-# 	await msg.channel.send("ho rilevato un link tenor. scrivi 'aggiungi' se vuoi aggiungerlo alla lista di reazioni veloci")
-# 	await confirm_event.wait()
-# 	#resetta i flag
-# 	confirm_event.clear()
-# 	waiting_for_conf = False
-# 	#aggiungi il link
-# 	#TODdO: nome
 
 
 @client.event
