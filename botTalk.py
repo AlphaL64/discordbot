@@ -34,7 +34,8 @@ def talkbot_init():
 	chrome_options = Options()
 	chrome_options.add_argument('--no-sandbox')
 	chrome_options.add_argument('--disable-dev-shm-usage')
-	driver = webdriver.Chrome(options=chrome_options)#, executable_path="./chromedriver")
+	driver = webdriver.Chrome(options=chrome_options)
+	# driver.set_window_size(1,1)
 
 	#prevents us from being blocked by the website
 	stealth(driver,
@@ -55,12 +56,16 @@ def talkbot_init():
 	sleep(1)
 	try:
 		if driver.find_element(by.XPATH, _LAST_ANSWER_PATH).text not in [None, ""]:
-			print("init succesful")
+			print("init successful")
 		else:
 			raise
 	except Exception as e:
-		print("init failed:", e)
+		print("init failed:", e, "\n\nyou can still use the bot, but talk functionality won't be available")
 		raise
+#END
+
+def talkbot_exit():
+	driver.quit()
 #END
 
 
@@ -109,7 +114,7 @@ async def getresponse(prompt: str) -> str:
 		response = Format(e)
 
 	return response
-
+#END
 
 
 # # old and bad getresponse func which relies on an external library that's always broken for some reason

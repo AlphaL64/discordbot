@@ -10,7 +10,7 @@ with open("TOKEN") as f:
 
 #from stayingalive import keep_alive
 
-from botTalk import getresponse, talkbot_init
+from botTalk import getresponse, talkbot_init, talkbot_exit
 # from stringOps import replace
 from timecheck import TimeCheckLoop, AddNewReminder, SetReminderFunction
 from quotes import getquote
@@ -64,9 +64,9 @@ async def SendLog(message):
 async def PingBorse(channel):
 	await channel.send(GetPing("Borsez"))
 
-def exit():
-	sus.setrecursionlimit(10**8)
-	exit()
+# def exit():
+# 	sus.setrecursionlimit(10**8)
+# 	exit()
 
 
 #constants
@@ -215,32 +215,32 @@ async def on_message(message: discord.Message):
 		if isinstance(message.channel, discord.DMChannel):
 			await respond_pm(message)
 		else:
+			if message.author == client.user:
+				#se è il messaggio di inizio, inizializza il bot
+				if message.content == INIT_SUCC_MSG:		#TODO: ci dev'essere un modo migliore
+					if message.channel.id == GetChannel(BOT_LOG_CHANNEL).id:
+						await init(message)
+				return
+		
+			print("received message:\n\t" + message.content + "\n")
+		
+			channel : discord.TextChannel = message.channel
+			contl: str = message.content.lower()
+		
+			#se è un comando normale
+			if message.content.startswith(COMMAND_PREFIX):
+				channel: discord.TextChannel = message.channel
+				msg: str = message.content[len(COMMAND_PREFIX):]	#teniamo solo il comando in se in modo che non dobbiamo preoccuparci del prefisso se cambia
+				tokens = msg.split(" ")
+
+				await NormalCommands(tokens, message, channel)
+				return
+			#se è un comando superuser
+			elif message.content.startswith(SUPERUSER_PREFIX):
+				await SuperuserCommands(message)
+				return
+
 			async with message.channel.typing():
-				if message.author == client.user:
-					#se è il messaggio di inizio, inizializza il bot
-					if message.content == INIT_SUCC_MSG:
-						if message.channel.id == GetChannel(BOT_LOG_CHANNEL).id:
-							await init(message)
-					return
-			
-				print("received message:\n\t" + message.content + "\n")
-			
-				channel : discord.TextChannel = message.channel
-				contl: str = message.content.lower()
-			
-				#se è un comando normale
-				if message.content.startswith(COMMAND_PREFIX):
-					channel: discord.TextChannel = message.channel
-					msg: str = message.content[len(COMMAND_PREFIX):]	#teniamo solo il comando in se in modo che non dobbiamo preoccuparci del prefisso se cambia
-					tokens = msg.split(" ")
-
-					await NormalCommands(tokens, message, channel)
-					return
-				#se è un comando superuser
-				elif message.content.startswith(SUPERUSER_PREFIX):
-					await SuperuserCommands(message)
-					return
-
 				#if we get a ping we call cleverbot chat
 				if SELF_PING in message.content or client.user.mention in message.content:
 					#await channel.send(random.choice(PING_ANSWERS) if random.randint(0, len(PING_ANSWERS) + 1) != 0 else message.author.mention)
@@ -384,12 +384,16 @@ async def SuperuserCommands(message : discord.Message):
 
 		if msg == "reboot":
 			await SendLog("restarting...")
+			await shutdown(do_exit=False)	#exit from the current session
+
+			input()
+
 			cmd = ["python3"] + sus.argv
 			#something like execute new thing and close old one
 			os.execv(sus.executable, cmd)
 		elif msg == "shutdown":
 			await SendLog("shutting down...")
-			exit()
+			await shutdown()
 		elif msg.startswith("exec"):
 			print("\t" "executing:\n\t" + msg[5:])
 			exec(msg[5:])
@@ -411,6 +415,18 @@ async def SuperuserCommands(message : discord.Message):
 
 async def pm(user, message):
 	await user.send(message)
+
+
+async def shutdown(do_exit = True):
+	talkbot_exit()
+	print("talkbot closed")
+	await client.close()
+	print("client closed")
+
+	if do_exit is True:
+		print("exiting...")
+		exit()
+#END
 
 
 @client.event
@@ -442,7 +458,10 @@ try:
 	timecheckthread = Thread(target=TimeCheckLoop)
 	timecheckthread.start()
 
-	talkbot_init()
+	try:
+		talkbot_init()
+	except Exception as e:
+		print(Fore.RED + excFormatter.Format(e) + Fore.WHITE)
 
 	#main client
 	client.run(TOKEN)
