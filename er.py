@@ -7,7 +7,8 @@ def er() -> str:
 		"Error 404 (Neurons not found)",
 		"IIE - Intelligence Interface Exception: no intelligence was found",
 		"PICNIC error: Problem In Chair Not In Computer",
-		"DKO error: Defective Keyboard Operator",
+		# "DKO error: Defective Keyboard Operator",
+		"RKO error: Retarded Keyboard Operator",
 		"LAYER 8 ISSUE: BIOLOGICAL INTERFACE ERROR",
 		"ID-10-T ERROR: NO FURTHER DETAILS GIVEN",
 	]
