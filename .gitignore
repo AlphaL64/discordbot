@@ -5,3 +5,7 @@ reminders.tmk
 TOKEN
 
 __*
+
+chromedriver
+
+test.py

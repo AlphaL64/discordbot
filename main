@@ -10,7 +10,7 @@ with open("TOKEN") as f:
 
 #from stayingalive import keep_alive
 
-from botTalk import getresponse
+from botTalk import getresponse, talkbot_init
 # from stringOps import replace
 from timecheck import TimeCheckLoop, AddNewReminder, SetReminderFunction
 from quotes import getquote
@@ -418,7 +418,7 @@ async def on_member_join(member: discord.User):
 	await GetChannel("generale").send("@everyone è arrivato " + member.mention)
 @client.event
 async def on_member_remove(member: discord.User):
-	None()
+	pass
 
 #TODO: non funziona
 # async def start_coros():
@@ -441,6 +441,8 @@ try:
 	SetReminderFunction(SendReminder)
 	timecheckthread = Thread(target=TimeCheckLoop)
 	timecheckthread.start()
+
+	talkbot_init()
 
 	#main client
 	client.run(TOKEN)
