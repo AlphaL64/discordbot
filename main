@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from common import *
+
 import discord
 import os
 import sys as sus
@@ -26,6 +28,9 @@ client = discord.Client(
 	intents=discord.Intents.all()
 )
 
+def cls():
+	import platform		#cpcls
+	os.system("cls" if platform.system() == "Windows" else "clear")
 def shell():
 	while True:
 		inp = input(">>> ")
@@ -67,110 +72,6 @@ async def PingBorse(channel):
 # def exit():
 # 	sus.setrecursionlimit(10**8)
 # 	exit()
-
-
-#constants
-SELF_PING : str
-
-INIT_SUCC_MSG = "online!"
-
-BOT_LOG_CHANNEL = "bot-log"
-
-REACTIONS = {}
-REACTIONS_FILE = "reactions.txt"
-
-COMMAND_PREFIX = "!"
-HELP_MSG  = f"""
-i comandi si scrivono con "{COMMAND_PREFIX}".
-comandi:
-	informazioni:
-	help			- mi chiedo cosa faccia questo comando
-	info			- informazioni sul di me
-
-	funzionalità:
-	echo msg		- ripete il messaggio, cancellando il tuo automaticamente
-	remindme time [; msg]	- ti manderò un promemoria alla data richiesta. se non aggiungi un messaggio, ti manderò un link al tuo post
-	quote			- frase ispirazionale generata al momento
-	addreact nome link	- aggiunge una reazione con il nome dato ed il link tenor specificato. richiede l'approvazione di un moderatore
-	
-	utilità:
-	ping [i]		- manda un ping a {"@"} "i" volte (una volta di default)
-	sus				- sus
-
-	debug:
-	channel			- scrive il nome e l'ID del canale in cui sei
-	user			- scrive nome e ID di chi ha scritto il messaggio
-"""#qui non funzionano i ping perché il client non è ancora attivo
-HELP_MSG_2 = f'i comandi si scrivono con "{COMMAND_PREFIX}". per una lista di comandi usa il comando "help"'
-BOT_INFO = f"""
-sono un bot programmato da @L, il proprietario del server, e sono fatto in Python usando l'API ufficiale di discord. sono appena stato creato quindi non ho molti comandi, ma sono in continua espansione. se hai suggerimenti, non esitare a mandarli in {"#"}!
-"""#'''
-
-MODS: list[discord.User] = []
-
-SUPERUSER_PREFIX = "superuser "
-SUPERUSER_IDS = [ 487601580539904000 ]
-INVALID_SUPER_ID = [#messaggi da mandare quando l'ID che richiede permessi superuser non è valido
-	"..._but nothing happened_",
-	"eh! volevi!",
-	f"ti credi intelligente? ascolto solo il mio padrone, <@!{SUPERUSER_IDS[0]}>!",
-	"non sei degno di questo potere!",
-	"https://tenor.com/view/sora-lella-tie-gif-7741962"
-]
-
-CHINESE_ANSWERS = [
-	"哔哔生菜",
-	"台湾是中国",
-	"我爱中国",
-	"你没有脑子",
-	"请中青虫",
-]
-RISPOSTE_GRAZIE = [
-	"di nulla",
-	"non c'è di che",
-	"è un piacere esserti utile",
-	"a volte è dura essere benevolo quanto me",
-	"non per vantarmi, ma merito decisamente la tua gratitudine",
-	"di nulla, è più forte di me aiutarti",
-	"dall'alto della mia magnanimità non avrei potuto non aiutarti",
-]
-PYTHON_ANSWERS = [
-	"C++ > Python",
-	"immagina un linguaggio in cui un errore di battitura ti viene fatto notare",
-	"*laughs in clearly superior C++*",
-	"_indentation_",
-	"programming in Python be like:\nhttps://tenor.com/view/monsters-university-snail-going-on-my-way-omw-gif-5461800",
-	"average Python fan:\nhttps://tenor.com/view/kerosene-kero-made-marcus-marcus-marcus-the-snail-he-goes-gif-22365259",
-]
-SUS_ANS = [
-	"""
-. 　　　。　　　　•　 　ﾟ　　。 　　.
-
-　　　.　　　 　　.　　　　　。　　 。　. 　
-
-.　　 。　　　　　 ඞ 。 . 　　 • 　　　　•
-
-　　ﾟ　　 Red was not An Impostor.　 。　.
-
-　　'　　　 1 Impostor remains 　 　　。
-
-　　ﾟ　　　.　　　. ,　　　　.　 .
-""",
-	"""
-➖➖🟥🟥🟥
-➖🟥🟥🟦🟦🟦
-🟥🟥🟥🟦🟦🟦
-🟥🟥🟥🟦🟦🟦
-🟥🟥🟥🟥🟥🟥
-➖🟥🟥🟥🟥🟥
-➖🟥🟥➖🟥🟥
-➖🟥🟥➖🟥🟥""",
-	"ඞ",
-	"https://tenor.com/view/among-us-twerk-fast-ass-shake-gif-20107138",
-	"https://tenor.com/view/sus-among-us-sussy-bakir-sussy-bakir-gif-24878782",
-	"https://tenor.com/view/among-us-sus-default-dance-sussy-sussy-baka-gif-25130929",
-	"https://tenor.com/view/when-the-impostor-is-sus-impostor-impostor-among-us-among-us-among-us-sus-gif-24712125",
-]
 	
 
 #events
@@ -189,13 +90,14 @@ async def on_ready():
 	global HELP_MSG
 	HELP_MSG = HELP_MSG.replace("@", GetPing("Borsez"))
 
-	await SendLog(INIT_SUCC_MSG)
-async def init(message: discord.Message):
+	#funziona solo se il bot è connesso a un server solo
 	if MODS == []:
-		for member in discord.utils.get(await message.guild.fetch_roles(), name="mod").members:
+		for member in discord.utils.get(await client.guilds[0].fetch_roles(), name="mod").members:
 			if not member == client.user:
 				MODS.append(member)
 	#ENDIF
+
+	await SendLog(INIT_SUCC_MSG)
 
 def updatereactions():
 	global REACTIONS
@@ -208,18 +110,14 @@ def updatereactions():
 async def on_message(message: discord.Message):
 	#è
 	try:
-		if message.author.id == 886477323812110356:
-			await message.channel.send(random.choice(["shut up", "dumbass", "fuck off", "i'll ban you", f"imagine being {message.author.mention}", "learn to write idiot", "", "i'll fucking turn you off if you don't shut up now", f"\"{message.author.mention}\" means 'idiot' in ancient Latin", "excuse me, i couldn't find any sign of intelligence in your message"]))
-			return
+		# if message.author.id == 886477323812110356:
+		# 	await message.channel.send(random.choice(["shut up", "dumbass", "fuck off", "i'll ban you", f"imagine being {message.author.mention}", "learn to write idiot", "", "i'll fucking turn you off if you don't shut up now", f"\"{message.author.mention}\" means 'idiot' in ancient Latin", "excuse me, i couldn't find any sign of intelligence in your message"]))
+		# 	return
 		
 		if isinstance(message.channel, discord.DMChannel):
 			await respond_pm(message)
 		else:
 			if message.author == client.user:
-				#se è il messaggio di inizio, inizializza il bot
-				if message.content == INIT_SUCC_MSG:		#TODO: ci dev'essere un modo migliore
-					if message.channel.id == GetChannel(BOT_LOG_CHANNEL).id:
-						await init(message)
 				return
 		
 			print("received message:\n\t" + message.content + "\n")
@@ -240,31 +138,34 @@ async def on_message(message: discord.Message):
 				await SuperuserCommands(message)
 				return
 
-			async with message.channel.typing():
+			if DO_CHATBOT is True:
 				#if we get a ping we call cleverbot chat
 				if SELF_PING in message.content or client.user.mention in message.content:
-					#await channel.send(random.choice(PING_ANSWERS) if random.randint(0, len(PING_ANSWERS) + 1) != 0 else message.author.mention)
-					print("\t" "initiating chat")
-					msg: str = message.content
-			
-					#cambiamo dal ping a un nome generico, in modo che quella stringa di numeri non mandi in palla l'IA
-					if client.user.mention in msg:
-						msg = msg.replace(client.user.mention, "")
-					else:	#if either of the two always
-						msg = msg.replace(SELF_PING, "")
-			
-					response = await getresponse(msg)
-					print("\t" "out of getresponse function")
-			
-					await message.reply(response, mention_author=False)
-					return
+					async with message.channel.typing():
+						#await channel.send(random.choice(PING_ANSWERS) if random.randint(0, len(PING_ANSWERS) + 1) != 0 else message.author.mention)
+						print("\t" "initiating chat")
+						msg: str = message.content
+				
+						#cambiamo dal ping a un nome generico, in modo che quella stringa di numeri non mandi in palla l'IA
+						if client.user.mention in msg:
+							msg = msg.replace(client.user.mention, "")
+						else:	#if either of the two always
+							msg = msg.replace(SELF_PING, "")
+				
+						response = await getresponse(msg)
+						print("\t" "out of getresponse function")
+				
+						await message.reply(response, mention_author=False)
+						return
+					#END
+				#END
 
 				#these are absolutely necessary
 				import re
 				if re.search(u'[\u4e00-\u9fff]+', message.content) is not None:
 					await channel.send(random.choice(CHINESE_ANSWERS))
 				if "python" in contl:
-					await channel.send(random.choice(PYTHON_ANSWERS))#TODO: più frasi belle lmao
+					await channel.send(random.choice(PYTHON_ANSWERS))
 				if "gatt" in contl:
 					await PingBorse(channel)
 				if "grazie" in contl:
@@ -286,7 +187,7 @@ async def on_message(message: discord.Message):
 		await channel.send(er())
 		await SendLog(f"il seguente messaggio ha causato un problema:\n{message.content}\n\nl'errore:\n" + Format(e))
 
-async def respond_pm(message: discord.Message):
+async def respond_pm(message: discord.Message):	#TODO: rendere il no una risposta utile
 	if message.author in MODS:
 		if message.content.lower().startswith("y"):
 			try:
@@ -354,7 +255,7 @@ async def NormalCommands(tokens: list[str], message: discord.Message, channel: d
 			name, link = tokens[1], tokens[2]
 			updatereactions()
 			if name in REACTIONS.keys():
-				await message.channel.send("ce n'è già una con quel nome")		#TODO: funny messaggio
+				await message.channel.send("ce n'è già una con quel nome")
 				return
 			for mod in MODS:
 				await mod.send(f"{message.author.name} ha chiesto di aggiungere una reazione:\n{name}\n{link}")
@@ -418,8 +319,9 @@ async def pm(user, message):
 
 
 async def shutdown(do_exit = True):
-	talkbot_exit()
-	print("talkbot closed")
+	if DO_CHATBOT is True:
+		talkbot_exit()
+		print("talkbot closed")
 	await client.close()
 	print("client closed")
 
@@ -436,19 +338,13 @@ async def on_member_join(member: discord.User):
 async def on_member_remove(member: discord.User):
 	pass
 
-#TODO: non funziona
-# async def start_coros():
-#     # ensure_future -> create_task in Python 3.7
-#     tasks = [asyncio.ensure_future(coro()) for coro in (coro1, coro2)]
-#     await asyncio.wait(tasks)
 def SendReminder(user, message):
 	import asyncio
 	asyncio.run(GetChannel("promemoria").send(GetUser(user).mention + "\n" + message))
 
 
 #main
-import platform		#cpcls
-os.system("cls" if platform.system() == "Windows" else "clear")
+cls()
 
 print("starting...")
 # keep_alive()
@@ -458,10 +354,11 @@ try:
 	timecheckthread = Thread(target=TimeCheckLoop)
 	timecheckthread.start()
 
-	try:
-		talkbot_init()
-	except Exception as e:
-		print(Fore.RED + excFormatter.Format(e) + Fore.WHITE)
+	if DO_CHATBOT is True:
+		try:
+			talkbot_init()
+		except Exception as e:
+			print(Fore.RED + excFormatter.Format(e) + Fore.WHITE)
 
 	#main client
 	client.run(TOKEN)

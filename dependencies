@@ -4,6 +4,7 @@ DEPENDENCIES = [
 	("googletrans==3.1.0a0", "googletrans"),
 	"cleverbotfree",
 	("inspiro", "inspirobot"),
+	"requests"
 ]
 
 import os, colorama
@@ -19,7 +20,7 @@ for module in DEPENDENCIES:
 		print(module, "is already installed")
 	except ModuleNotFoundError:
 		print("module", modname, "not found, installing now")
-		res = os.system("pip -q install " + module)
+		res = os.system("python3 -m pip -q install " + module)
 		if res == 0:
 			print("installed!")
 		else:

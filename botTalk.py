@@ -92,7 +92,8 @@ async def getresponse(prompt: str) -> str:
 		print("\t\tgenerating response for:", prompt)
 
 		#lingua del messaggio originale
-		msglanguage = translator.detect(prompt).lang
+		# msglanguage = translator.detect(prompt).lang
+		msglanguage = "it"
 		print("\t\tmessage received in language:", msglanguage)
 
 		#dato che il bot è usato in Italiano. in teoria funziona anche per altre lingue
