@@ -3,4 +3,6 @@
 reminders.tmk
 TOKEN
 
-__*
+__pycache__
+
+_.*

@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+from cst_logging import log, output_channels_add, indent_level_push, indent_level_pop, indent_level_reset
+from botTalk import getresponse, talkbot_init, talkbot_exit
+# from stringOps import replace
+from timecheck import TimeCheckLoop, AddNewReminder, SetReminderFunction
+from quotes import getquote
+
 from common import *
 
 import discord
@@ -9,13 +15,6 @@ from threading import Thread
 
 with open("TOKEN") as f:
 	TOKEN = f.read(-1)
-
-#from stayingalive import keep_alive
-
-from botTalk import getresponse, talkbot_init, talkbot_exit
-# from stringOps import replace
-from timecheck import TimeCheckLoop, AddNewReminder, SetReminderFunction
-from quotes import getquote
 
 from er import er as er
 from er import ID10T_Exception
@@ -63,6 +62,9 @@ def GetPing(name : str) -> str:
 def GetChannelLink(name : str) -> str:
 	return GetChannel(name).mention
 
+def sendlog_noasync(message):
+	import asyncio
+	asyncio.run(SendLog(message))
 async def SendLog(message):
 	await GetChannel(BOT_LOG_CHANNEL).send(message)
 
@@ -89,6 +91,8 @@ async def on_ready():
 	BOT_INFO = BOT_INFO.replace("#", GetChannelLink("bot-tests"))
 	global HELP_MSG
 	HELP_MSG = HELP_MSG.replace("@", GetPing("Borsez"))
+	
+	updatereactions()
 
 	#funziona solo se il bot è connesso a un server solo
 	if MODS == []:
@@ -108,6 +112,7 @@ def updatereactions():
 
 @client.event
 async def on_message(message: discord.Message):
+	indent_level_reset()
 	#è
 	try:
 		# if message.author.id == 886477323812110356:
@@ -120,7 +125,8 @@ async def on_message(message: discord.Message):
 			if message.author == client.user:
 				return
 		
-			print("received message:\n\t" + message.content + "\n")
+			log("received message:\n\t" + message.content + "\n")
+			indent_level_push()
 		
 			channel : discord.TextChannel = message.channel
 			contl: str = message.content.lower()
@@ -143,7 +149,7 @@ async def on_message(message: discord.Message):
 				if SELF_PING in message.content or client.user.mention in message.content:
 					async with message.channel.typing():
 						#await channel.send(random.choice(PING_ANSWERS) if random.randint(0, len(PING_ANSWERS) + 1) != 0 else message.author.mention)
-						print("\t" "initiating chat")
+						log("initiating chat")
 						msg: str = message.content
 				
 						#cambiamo dal ping a un nome generico, in modo che quella stringa di numeri non mandi in palla l'IA
@@ -153,7 +159,7 @@ async def on_message(message: discord.Message):
 							msg = msg.replace(SELF_PING, "")
 				
 						response = await getresponse(msg)
-						print("\t" "out of getresponse function")
+						log("out of getresponse function")
 				
 						await message.reply(response, mention_author=False)
 						return
@@ -200,10 +206,10 @@ async def respond_pm(message: discord.Message):	#TODO: rendere il no una rispost
 					file.write(f'"{reaction[1]}" : "{reaction[2]}",\n')
 			except Exception as e:
 				import excFormatter
-				print("error:\n" + excFormatter.Format(e))
+				log("error:\n" + excFormatter.Format(e), do_indent=False)
 			else:
 				await message.channel.send("successfully added!")
-				await SendLog("nuova reazione tenor aggiunta")
+				log("nuova reazione tenor aggiunta")
 				updatereactions()
 			
 
@@ -221,7 +227,7 @@ async def NormalCommands(tokens: list[str], message: discord.Message, channel: d
 			await message.delete()
 			
 		case "ping":
-			print("\t" "comedy genius")
+			log("comedy genius")
 			if len(tokens) == 1:	#no parameters
 				await PingBorse(channel)
 			else:
@@ -241,7 +247,7 @@ async def NormalCommands(tokens: list[str], message: discord.Message, channel: d
 	
 		case "remindme":
 			#TODO
-			pass
+			raise ID10T_Exception
 
 		case "user":
 			await channel.send(f"{message.author.display_name} ({message.author.id})")
@@ -270,21 +276,21 @@ async def NormalCommands(tokens: list[str], message: discord.Message, channel: d
 #END commands
 async def SuperuserCommands(message : discord.Message):
 	try:
-		print("\t" "in superuser function")
+		log("in superuser function")
 
 		channel: discord.TextChannel = message.channel
 		msg: str = message.content[len(SUPERUSER_PREFIX):]
 
 		if message.author.id not in SUPERUSER_IDS:
 			await channel.send(random.choice(INVALID_SUPER_ID))
-			await SendLog(f"{message.author} tried executing a superuser command")
+			log(f"{message.author} tried executing a superuser command")
 			return
 		
-		print("\t" "executing superuser command")
-		await SendLog(f"{message.author} executing superuser command:\n\t" + message.content)
+		log("executing superuser command")
+		log(f"{message.author} executing superuser command:\n\t" + message.content)
 
 		if msg == "reboot":
-			await SendLog("restarting...")
+			log("restarting...")
 			await shutdown(do_exit=False)	#exit from the current session
 
 			input()
@@ -293,12 +299,12 @@ async def SuperuserCommands(message : discord.Message):
 			#something like execute new thing and close old one
 			os.execv(sus.executable, cmd)
 		elif msg == "shutdown":
-			await SendLog("shutting down...")
+			log("shutting down...")
 			await shutdown()
 		elif msg.startswith("exec"):
-			print("\t" "executing:\n\t" + msg[5:])
+			log("executing:\n\t" + msg[5:])
 			exec(msg[5:])
-			print("end of exec")
+			log("end of exec")
 		elif msg.startswith("pm("):
 			username = GetUser(msg[3:msg.index(",")])
 			emssage = eval(msg[msg.index(",")+1:msg.index(")")])
@@ -311,7 +317,7 @@ async def SuperuserCommands(message : discord.Message):
 			os.system(msg[len("shell "):])
 
 	except Exception as e:
-		await SendLog(f"Errore nell'uso del comando superuser {msg}:\n" + Format(e))
+		log(f"Errore nell'uso del comando superuser {msg}:\n" + Format(e), do_indent=False)
 #END superuser
 
 async def pm(user, message):
@@ -319,11 +325,13 @@ async def pm(user, message):
 
 
 async def shutdown(do_exit = True):
+	indent_level_reset()
 	if DO_CHATBOT is True:
 		talkbot_exit()
-		print("talkbot closed")
+		log("talkbot closed")
+	
 	await client.close()
-	print("client closed")
+	print("client closed")	#TODO: remove SendLog from output_channels, ALWAYS use log
 
 	if do_exit is True:
 		print("exiting...")
@@ -343,27 +351,40 @@ def SendReminder(user, message):
 	asyncio.run(GetChannel("promemoria").send(GetUser(user).mention + "\n" + message))
 
 
-#main
-cls()
+def main():
+	cls()
 
-print("starting...")
-# keep_alive()
+	output_channels_add(
+		function=print,
+	)
+	output_channels_add(
+		function=sendlog_noasync,
+		indent_str="* ",
+	)
 
-try:
-	SetReminderFunction(SendReminder)
-	timecheckthread = Thread(target=TimeCheckLoop)
-	timecheckthread.start()
+	#can't use `log`, bot isn't on
+	print("starting...")
+	# keep_alive()
 
-	if DO_CHATBOT is True:
-		try:
-			talkbot_init()
-		except Exception as e:
-			print(Fore.RED + excFormatter.Format(e) + Fore.WHITE)
+	try:
+		# SetReminderFunction(SendReminder)
+		# timecheckthread = Thread(target=TimeCheckLoop)
+		# timecheckthread.start()
 
-	#main client
-	client.run(TOKEN)
-except Exception as e:
-	import excFormatter
-	from colorama import Fore
-	print(Fore.RED + excFormatter.Format(e) + Fore.WHITE)
-	exit()
+		if DO_CHATBOT is True:
+			try:
+				talkbot_init()
+			except Exception as e:
+				print(Fore.RED + excFormatter.Format(e) + Fore.WHITE)
+
+		#main client
+		client.run(TOKEN)
+	except Exception as e:
+		import excFormatter
+		from colorama import Fore
+		print(Fore.RED + excFormatter.Format(e) + Fore.WHITE)
+		exit()
+
+if __name__ == "__main__":
+	main()
+#TODO: fuck
