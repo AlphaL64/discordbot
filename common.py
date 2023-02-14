@@ -1,6 +1,15 @@
 
 import discord
 
+
+def printerror(msg):
+	from colorama import Fore
+	print(f"{Fore.RED}ERROR{Fore.RED}: {msg}")
+def printwarning(msg):
+	from colorama import Fore
+	print(f"{Fore.YELLOW}WARNING{Fore.WHITE}: {msg}")
+
+
 #se True allora cleverbot verrà aperto
 DO_CHATBOT = True
 

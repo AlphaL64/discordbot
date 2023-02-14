@@ -3,7 +3,6 @@
 #TODO:
 #	logging non funziona giusto
 #	addreact non funziona in più server
-#	help-msg funziona solo con @Borsez, non va in server senza di lui
 #	canale bot-log
 #	addreact è brutto quando rispondi ai PM
 
@@ -69,6 +68,13 @@ def GetPing(name : str) -> str:
 def GetChannelLink(name : str) -> str:
 	return GetChannel(name).mention
 
+def GetPingVictim(servername: str) -> str:
+	user_dict = {
+		"Movimento Indipendentista del Candystan" 	: "afflo",
+		"GliUbriachiDelSabatoSera"					: "Borsez",
+	}
+	return GetPing(user_dict[servername])
+
 # def sendlog_noasync(message):
 # 	import asyncio
 # 	asyncio.run(SendLog(message))
@@ -77,6 +83,8 @@ async def SendLog(message):
 
 async def PingBorse(channel):
 	await channel.send(GetPing("Borsez"))
+async def PingVictim(channel):
+	await channel.send(GetPingVictim(channel.guild.name))
 
 # def exit():
 # 	sus.setrecursionlimit(10**8)
@@ -96,8 +104,6 @@ async def on_ready():
 	#aggiunge un collegamento a generale alle info del bot. non possiamo settarlo insieme al resto del messaggio perché il client non è attivo
 	global BOT_INFO
 	BOT_INFO = BOT_INFO.replace("#", GetChannelLink("bot-tests"))
-	global HELP_MSG
-	HELP_MSG = HELP_MSG.replace("@", GetPing("Borsez"))
 	
 	updatereactions()
 
@@ -233,7 +239,8 @@ async def respond_pm(message: discord.Message):	#TODO: rendere il no una rispost
 async def NormalCommands(tokens: list[str], message: discord.Message, channel: discord.TextChannel):
 	match tokens[0]:
 		case "help":
-			await channel.send(HELP_MSG)
+			msg = HELP_MSG.replace("@", GetPingVictim(channel.guild.name))
+			await channel.send(msg)
 			await channel.send("reazioni:\n\t" + "\n\t".join(REACTIONS.keys()))
 			
 		case "info":
@@ -246,12 +253,12 @@ async def NormalCommands(tokens: list[str], message: discord.Message, channel: d
 		case "ping":
 			await log_async("comedy genius")
 			if len(tokens) == 1:	#no parameters
-				await PingBorse(channel)
+				await PingVictim(channel)
 			else:
 				tot = int(tokens[1])
 				if tot < 1: raise
 				for i in range(tot):
-					await PingBorse(channel)
+					await PingVictim(channel)
 
 		case "quote":
 			if len(tokens) == 1:	#no parameters
@@ -306,7 +313,7 @@ async def SuperuserCommands(message : discord.Message):
 			return
 		
 		await log_async("executing superuser command")
-		await log_async(f"{message.author} executing superuser command:\n\t" + message.content)
+		await log_async(f"{message.author} is executing a superuser command: '" + message.content + "'")
 
 		if msg == "reboot":
 			await log_async("restarting...")
@@ -321,7 +328,7 @@ async def SuperuserCommands(message : discord.Message):
 			await log_async("shutting down...")
 			await shutdown()
 		elif msg.startswith("exec"):
-			await log_async("executing:\n\t" + msg[5:])
+			await log_async("executing:\t>>>\t" + msg[5:])
 			exec(msg[5:])
 			await log_async("end of exec")
 		elif msg.startswith("pm("):
