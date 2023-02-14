@@ -2,7 +2,7 @@
 import discord
 
 #se True allora cleverbot verrà aperto
-DO_CHATBOT = False
+DO_CHATBOT = True
 
 #constants
 SELF_PING : str

@@ -1,28 +1,47 @@
 from typing import Callable, Any
 
+class output_channel:
+	def __init__(self, function: Callable[[str], Any], priority_threshold: int = 0, indent_str: str = -1, do_indent: bool = True) -> None:
+		self.function = function
+		self.indent_str = indent_str if isinstance(indent_str, str) else "\t"
+		self.do_indent = do_indent
+		self.priority_threshold = priority_threshold
+
+	function: Callable[[str], Any]
+	indent_str: str
+	do_indent: bool
+	priority_threshold: int
+
+	async def output_async(self, message, do_indent, priority):
+		if priority < self.priority_threshold:
+			return
+
+		indentation = (self.indent_str * indent_level_get()) if (self.do_indent or do_indent) else ""
+		message = indentation + str(message)
+
+		from asyncio import iscoroutinefunction
+		if iscoroutinefunction(self.function):
+			await self.function(message)
+		else:
+			self.function(message)
+#END
+
 #variables
 __INDENT_LEVEL  = 0
-__INDENT_STRING = "\t"
-__OUTPUT_CHANNELS: list[tuple[Callable[[str], Any], str, bool]] = []
+# __INDENT_STRING = "\t"
+__OUTPUT_CHANNELS: list[output_channel] = []
 
 #settings
-def output_channels_add(function: Callable[[str], Any], indent_str:str=-1, do_indent=True):
+def output_channels_add(channel: output_channel):
 	"""
 	Adds an output channel.
 
 	All future log messages will be printed via this function as well as all the previously set functions.
-	
-	`function`:   the function that will be called every time the `log` function is invoked.
-	`indent_str`: the string that will be used in indentation; if none is specified, it will use the default.
-	`do_indent`:  if false, this output channel will not indent when printing.
 	"""
-	__OUTPUT_CHANNELS.append((function, (indent_str if indent_str != -1 else __INDENT_STRING), do_indent))
-def output_channels_get(index=-1):
-	"""Get all output channels, or the one with the given `index` if specified."""
-	if index == -1:
-		return __OUTPUT_CHANNELS
-	else:
-		return __OUTPUT_CHANNELS[index]
+	__OUTPUT_CHANNELS.append(channel)
+def output_channels_get() -> list[output_channel]:
+	"""Get all output channels."""
+	return __OUTPUT_CHANNELS
 
 def indent_level_push(n=1):
 	"""Adds one level of indentation, or `n` levels if `n` is specified."""
@@ -31,8 +50,9 @@ def indent_level_push(n=1):
 def indent_level_pop(n=1):
 	"""Removes one level of indentation, or `n` levels if `n` is specified."""
 	global __INDENT_LEVEL
-	if __INDENT_LEVEL < n:
-		raise Exception("can't decrease the indentation level to less than zero")
+	#TODO:
+	# if __INDENT_LEVEL < n:
+	# 	raise Exception("can't decrease the indentation level to less than zero")
 	__INDENT_LEVEL -= n
 def indent_level_reset():
 	"""Sets the indent level to zero."""
@@ -42,13 +62,13 @@ def indent_level_get() -> int:
 	"""Get the current indentation level"""
 	return __INDENT_LEVEL
 
-def indent_string_set(new_str: str):
-	"""Set the string that will be used when indenting."""
-	global __INDENT_STRING
-	__INDENT_STRING = str(new_str)
-def indent_string_get() -> str:
-	"""Get the string being used when indenting."""
-	return __INDENT_STRING
+# def indent_string_set(new_str: str):
+# 	"""Set the string that will be used when indenting."""
+# 	global __INDENT_STRING
+# 	__INDENT_STRING = str(new_str)
+# def indent_string_get() -> str:
+# 	"""Get the string being used when indenting."""
+# 	return __INDENT_STRING
 
 # def indent_full_get() -> str:
 # 	"""Returns a string with the current amount of indentation, indented using the indentation string."""
@@ -59,13 +79,10 @@ def indent_string_get() -> str:
 
 #FUNCS
 
-#TODO: priority system
-def log(message: str, do_indent=True):
+#TODO: better priority system
+async def log_async(message: str, priority: int = 0, do_indent=True):
 	"""logs a message to all output channels"""
 	for channel in output_channels_get():
-		func = channel[0]
-		indent_str = channel[1]
-		do_indent = (channel[2] and do_indent)
+		await channel.output_async(message, do_indent, priority)
 
-		indentation = (indent_str * indent_level_get()) if do_indent is True else ""
-		func(indentation + str(message))
+		

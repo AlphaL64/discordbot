@@ -1,6 +1,6 @@
 #TODO: organise into a lib folder
 
-from cst_logging import log, indent_level_push, indent_level_pop
+from cst_logging import log_async, indent_level_push, indent_level_pop
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By as by
@@ -95,32 +95,36 @@ async def getresponse(prompt: str) -> str:
 	try:
 		indent_level_push()
 
-		log("generating response for: " + prompt)
+		await log_async("generating response for: " + prompt)
 
 		#lingua del messaggio originale
 		# msglanguage = translator.detect(prompt).lang
 		msglanguage = "it"
-		log("message received in language: " + msglanguage)
+		# log("message received in language: " + msglanguage)
+
+		if prompt.replace(" ", "") == "":
+			import random
+			prompt = "".join([chr(random.randint(65, 90)) for i in range(10)])
 
 		#dato che il bot è usato in Italiano. in teoria funziona anche per altre lingue
 		prompt = translator.translate(prompt, src=msglanguage).text
-		log("translated input: " + prompt)
+		await log_async("translated input: " + prompt)
 
 		#ottiene la risposta
 		indent_level_push()
-		log("getting answer...")
+		await log_async("getting answer...")
 		response = await _askbot(prompt)
-		log("response: " + response)
+		await log_async("response: " + response)
 		indent_level_pop()
 
 		if response == "": response = "i couldn't process the question, sorry"
 
 		#per mantenere continuità, il bot risponde nella stessa lingua in cui gli scrivi
 		response = translator.translate(response, dest=msglanguage).text
-		log("translated response: " + response)
+		await log_async("translated response: " + response)
 	except Exception as e:
 		response = Format(e)
-		log(("an error occured:\n" + response), do_indent=False)
+		await log_async(("an error occured:\n" + response), do_indent=False)
 
 	return response
 #END
