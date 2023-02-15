@@ -50,9 +50,8 @@ def indent_level_push(n=1):
 def indent_level_pop(n=1):
 	"""Removes one level of indentation, or `n` levels if `n` is specified."""
 	global __INDENT_LEVEL
-	#TODO:
-	# if __INDENT_LEVEL < n:
-	# 	raise Exception("can't decrease the indentation level to less than zero")
+	if __INDENT_LEVEL < n:
+		raise Exception("can't decrease the indentation level to less than zero")
 	__INDENT_LEVEL -= n
 def indent_level_reset():
 	"""Sets the indent level to zero."""
@@ -83,6 +82,8 @@ def indent_level_get() -> int:
 async def log_async(message: str, priority: int = 0, do_indent=True):
 	"""logs a message to all output channels"""
 	for channel in output_channels_get():
-		await channel.output_async(message, do_indent, priority)
-
+		try:
+			await channel.output_async(message, do_indent, priority)
+		except Exception as e:
+			print("errr")
 		

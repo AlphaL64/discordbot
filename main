@@ -157,10 +157,10 @@ async def on_message(message: discord.Message):
 					await channel.send("il comando non funziona ancora, quindi non puoi usarlo")
 					if random.randint(0,3) == 0: await channel.send("coglione")
 				return
-			#se è un comando superuser
-			elif message.content.startswith(SUPERUSER_PREFIX):
-				await SuperuserCommands(message)
-				return
+			# #se è un comando superuser
+			# elif message.content.startswith(SUPERUSER_PREFIX):
+			# 	await SuperuserCommands(message)
+			# 	return
 
 			if DO_CHATBOT is True:
 				#if we get a ping we call cleverbot chat
@@ -238,6 +238,9 @@ async def respond_pm(message: discord.Message):	#TODO: rendere il no una rispost
 
 async def NormalCommands(tokens: list[str], message: discord.Message, channel: discord.TextChannel):
 	match tokens[0]:
+		case "superuser":
+			await SuperuserCommands(tokens[1:], message, channel)
+
 		case "help":
 			msg = HELP_MSG.replace("@", GetPingVictim(channel.guild.name))
 			await channel.send(msg)
@@ -300,12 +303,12 @@ async def NormalCommands(tokens: list[str], message: discord.Message, channel: d
 			else:
 				raise ID10T_Exception
 #END commands
-async def SuperuserCommands(message : discord.Message):
+async def SuperuserCommands(tokens: list[str], message: discord.Message, channel: discord.TextChannel):
 	try:
 		await log_async("in superuser function")
-
-		channel: discord.TextChannel = message.channel
-		msg: str = message.content[len(SUPERUSER_PREFIX):]
+		
+		msg = " ".join(tokens)
+		params = " ".join(tokens[1:])
 
 		if message.author.id not in SUPERUSER_IDS:
 			await channel.send(random.choice(INVALID_SUPER_ID))
@@ -315,32 +318,33 @@ async def SuperuserCommands(message : discord.Message):
 		await log_async("executing superuser command")
 		await log_async(f"{message.author} is executing a superuser command: '" + message.content + "'")
 
-		if msg == "reboot":
-			await log_async("restarting...")
-			await shutdown(do_exit=False)	#exit from the current session
+		match tokens[0]:
+			case "reboot":
+				await log_async("restarting...")
 
-			input()
-
-			cmd = ["python3"] + sus.argv
-			#something like execute new thing and close old one
-			os.execv(sus.executable, cmd)
-		elif msg == "shutdown":
-			await log_async("shutting down...")
-			await shutdown()
-		elif msg.startswith("exec"):
-			await log_async("executing:\t>>>\t" + msg[5:])
-			exec(msg[5:])
-			await log_async("end of exec")
-		elif msg.startswith("pm("):
-			username = GetUser(msg[3:msg.index(",")])
-			emssage = eval(msg[msg.index(",")+1:msg.index(")")])
-			await pm(username, emssage)
-		elif msg.startswith("ban"):
-			await GetUser(msg[4:]).ban()
-		elif msg.startswith("kick"):
-			await GetUser(msg[5:]).kick()
-		elif msg.startswith("shell "):
-			os.system(msg[len("shell "):])
+				global BOT_RETURN_CODE
+				BOT_RETURN_CODE = return_codes.reboot
+				
+				#exit from the current session. this returns to client.run() instead of the line after this
+				await shutdown()
+			case "shutdown":
+				await log_async("shutting down...")
+				await shutdown()
+			case "exec":
+				await log_async("executing:\t>>>\t" + params)
+				exec(params)
+				await log_async("end of exec")
+			case "pm":
+				tokens2 = params.split(";")
+				username = GetUser(tokens2[0])
+				emssage = str(eval(tokens2[1]))
+				await pm(username, emssage)
+			case "ban":
+				await GetUser(params).ban()
+			case "kick":
+				await GetUser(params).kick()
+			case "shell":
+				os.system(params)
 
 	except Exception as e:
 		await log_async(f"Errore nell'uso del comando superuser {msg}:\n" + Format(e), do_indent=False)
@@ -350,18 +354,13 @@ async def pm(user, message):
 	await user.send(message)
 
 
-async def shutdown(do_exit = True):
+async def shutdown():
 	indent_level_reset()
 	if DO_CHATBOT is True:
 		talkbot_exit()
 		await log_async("talkbot closed")
 	
 	await client.close()
-	print("client closed")	#TODO: remove SendLog from output_channels, ALWAYS use log
-
-	if do_exit is True:
-		print("exiting...")
-		exit()
 #END
 
 
@@ -378,7 +377,7 @@ def SendReminder(user, message):
 
 
 def main():
-	cls()
+	# cls()
 
 	output_channels_add(output_channel(
 		function=print,
@@ -391,7 +390,6 @@ def main():
 
 	#can't use `log`, bot isn't on
 	print("starting...")
-	# keep_alive()
 
 	try:
 		# SetReminderFunction(SendReminder)
@@ -402,16 +400,22 @@ def main():
 			try:
 				talkbot_init()
 			except Exception as e:
-				print(Fore.RED + excFormatter.Format(e) + Fore.WHITE)
+				printerror("\n" + excFormatter.Format(e))
 
 		#main client
-		client.run(TOKEN)	#TODO: reboot
+		client.run(TOKEN)
+
+		if BOT_RETURN_CODE == return_codes.reboot:
+			cmd = ["python3"] + sus.argv
+			#something like execute new thing and close old one
+			os.execv(sus.executable, cmd)
+
 	except Exception as e:
 		import excFormatter
-		from colorama import Fore
-		print(Fore.RED + excFormatter.Format(e) + Fore.WHITE)
+		printerror("\n" + excFormatter.Format(e))
 		exit()
 
+#value can be edited by everyone. will be checked on exit from the client for various things
+BOT_RETURN_CODE = return_codes.none
 if __name__ == "__main__":
 	main()
-#TODO: fuck

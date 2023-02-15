@@ -1,5 +1,12 @@
 
 import discord
+from enum import Enum
+
+
+class return_codes(Enum):
+	none   = 0
+	reboot = 1
+	error  = -1
 
 
 def printerror(msg):
@@ -52,7 +59,7 @@ sono un bot programmato da @L, il proprietario del server, e sono fatto in Pytho
 
 MODS: list[discord.User] = []
 
-SUPERUSER_PREFIX = "superuser "
+# SUPERUSER_PREFIX = "superuser "
 SUPERUSER_IDS = [ 487601580539904000 ]
 INVALID_SUPER_ID = [#messaggi da mandare quando l'ID che richiede permessi superuser non è valido
 	"..._but nothing happened_",
