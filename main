@@ -377,7 +377,7 @@ def SendReminder(user, message):
 
 
 def main():
-	# cls()
+	cls()
 
 	output_channels_add(output_channel(
 		function=print,
@@ -407,7 +407,6 @@ def main():
 
 		if BOT_RETURN_CODE == return_codes.reboot:
 			cmd = ["python3"] + sus.argv
-			#something like execute new thing and close old one
 			os.execv(sus.executable, cmd)
 
 	except Exception as e:
